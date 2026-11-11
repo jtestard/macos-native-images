@@ -18,13 +18,16 @@ sources; this repository only holds the build recipes.
 
 ## Use an image
 
-With the runtime installed and the `macnative` Docker context selected:
+With the runtime installed, pass its `macnative` Docker context:
 
 ```sh
-docker pull jtstormz/whisper-server:v1.9.1-base.en
-docker run -d --name whisper jtstormz/whisper-server:v1.9.1-base.en
+docker --context macnative pull jtstormz/whisper-server:v1.9.1-base.en
+docker --context macnative run -d --name whisper jtstormz/whisper-server:v1.9.1-base.en
 curl http://127.0.0.1:8000/v1/audio/transcriptions -F file=@speech.wav
 ```
+
+To leave out `--context`, run `docker context use macnative` once; switch back
+with `docker context use desktop-linux`.
 
 `llama-server` needs a model directory mounted read-only at `/app/models`; see
 the runtime's README for a complete example. The servers listen on loopback
