@@ -59,7 +59,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   cli.runApp(
     new ServerOptions({
       agent: fileURLToPath(import.meta.url),
-      wsURL: env('LIVEKIT_URL', 'ws://127.0.0.1:20880'),
+      wsURL: env('LIVEKIT_URL', 'ws://127.0.0.1:30880'),
       apiKey: env('LIVEKIT_API_KEY', 'devkey'),
       apiSecret: env('LIVEKIT_API_SECRET', 'secret'),
       // Health and metrics endpoint (the framework default, 8081, is left free).

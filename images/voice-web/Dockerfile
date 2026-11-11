@@ -8,4 +8,4 @@ RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -trimpath -o /out/w
 FROM scratch
 COPY --from=build /out/web /web
 EXPOSE 20090
-ENTRYPOINT ["/web", "-addr", "0.0.0.0:20090", "-livekit-url", "ws://localhost:20880"]
+ENTRYPOINT ["/web", "-addr", "0.0.0.0:20090", "-livekit-url", "ws://localhost:30880"]
