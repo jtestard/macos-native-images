@@ -24,7 +24,7 @@ Two more images package a small demo voice assistant whose source lives in
 | Image | Source | What it does |
 | --- | --- | --- |
 | [`jtstormz/voice-agent`](https://hub.docker.com/r/jtstormz/voice-agent) (`darwin/arm64`) | [`voice/agent`](voice/agent/agent.js) | A [LiveKit Agents](https://github.com/livekit/agents-js) voice agent that joins every LiveKit room and talks through the three servers above. |
-| [`jtstormz/voice-web`](https://hub.docker.com/r/jtstormz/voice-web) (`linux/arm64`) | [`voice/web`](voice/web/main.go) | A one-page browser client on port 20090 that hands out LiveKit room tokens. |
+| [`jtstormz/voice-web`](https://hub.docker.com/r/jtstormz/voice-web) (`linux/arm64`) | [`voice/web`](voice/web/main.go) | A one-page browser client on port 20090 (published by the voice cluster on 30900) that hands out LiveKit room tokens. |
 
 [`voice/agent/test-conversation.js`](voice/agent/test-conversation.js) checks
 the whole loop without a microphone: it joins a room through the web client,
