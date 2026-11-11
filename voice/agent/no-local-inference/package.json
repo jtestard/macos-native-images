@@ -1,0 +1,7 @@
+{
+  "name": "@livekit/local-inference",
+  "version": "0.0.0-none",
+  "description": "Empty replacement for @livekit/local-inference, which carries the proprietary LiveKit Model License. Loading it fails, so LiveKit Agents disables its local turn-detection models.",
+  "license": "MIT",
+  "main": "index.js"
+}

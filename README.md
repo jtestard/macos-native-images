@@ -89,6 +89,12 @@ through `go run`, so nothing else needs installing.
   permission warning when Metal cannot write its shader cache.
 - Kokoro's Python dependencies are resolved from upstream version ranges at
   build time, so a later rebuild can pick newer packages.
+- Every component is open source. LiveKit Agents depends on
+  `@livekit/local-inference`, whose bundled turn-detection models are under
+  the proprietary LiveKit Model License, so the voice agent replaces it with an
+  empty package, [`voice/agent/no-local-inference`](voice/agent/no-local-inference),
+  through an npm override. The framework then logs that local turn detection
+  is disabled; the agent detects speech with the Silero VAD instead.
 - The voice agent speaks a fixed greeting that stays out of the chat history:
   some chat templates, such as Mistral's, reject an assistant turn before the
   first user turn.
@@ -98,4 +104,6 @@ through `go run`, so nothing else needs installing.
 The build recipes are [MIT licensed](LICENSE). Each image contains software and
 model weights under their own upstream licenses: llama.cpp and whisper.cpp
 (MIT), Kokoro-FastAPI (Apache 2.0), Kokoro-82M (Apache 2.0), the Whisper
-model (MIT), and LiveKit Agents (Apache 2.0) in the voice agent.
+model (MIT), and in the voice agent LiveKit Agents (Apache 2.0), the Silero
+VAD model (MIT) and their npm dependencies (MIT, Apache 2.0, BSD, ISC and
+LGPL licenses).
