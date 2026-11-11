@@ -10,28 +10,37 @@ LLAMA_CPP_REF := ee0445c
 WHISPER_REF   := v1.9.1
 KOKORO_REF    := b4ef64b
 UV_VERSION    := 0.13.4
+NODE_VERSION  := 22.23.4
+VOICE_VERSION := 0.1.0
 
 LLAMA_IMAGE   := $(NAMESPACE)/llama-server:$(LLAMA_CPP_REF)
 WHISPER_IMAGE := $(NAMESPACE)/whisper-server:$(WHISPER_REF)-base.en
 KOKORO_IMAGE  := $(NAMESPACE)/kokoro:$(KOKORO_REF)
+VOICE_AGENT_IMAGE := $(NAMESPACE)/voice-agent:$(VOICE_VERSION)
+VOICE_WEB_IMAGE   := $(NAMESPACE)/voice-web:$(VOICE_VERSION)
 
 B     := .build
 CRANE := go run github.com/google/go-containerregistry/cmd/crane@v0.20.6
 BUILDX = docker buildx build --builder $(BUILDER) --platform darwin/arm64 --progress plain
 
-.PHONY: all llama-server whisper-server kokoro push push-llama-server \
-        push-whisper-server push-kokoro clean help
+.PHONY: all llama-server whisper-server kokoro voice-agent voice-web push \
+        push-llama-server push-whisper-server push-kokoro push-voice-agent \
+        push-voice-web clean help
 .DELETE_ON_ERROR:
 
 help:
-	@echo 'make all | llama-server | whisper-server | kokoro      build OCI tarballs in $(B)/'
-	@echo 'make push | push-llama-server | push-whisper-server | push-kokoro'
-	@echo 'Images: $(LLAMA_IMAGE)  $(WHISPER_IMAGE)  $(KOKORO_IMAGE)'
+	@echo 'make all | llama-server | whisper-server | kokoro | voice-agent | voice-web'
+	@echo '    build OCI tarballs in $(B)/'
+	@echo 'make push | push-<image>'
+	@echo 'Images: $(LLAMA_IMAGE) $(WHISPER_IMAGE) $(KOKORO_IMAGE)'
+	@echo '        $(VOICE_AGENT_IMAGE) $(VOICE_WEB_IMAGE)'
 
-all: llama-server whisper-server kokoro
+all: llama-server whisper-server kokoro voice-agent voice-web
 llama-server: $(B)/llama-server.tar
 whisper-server: $(B)/whisper-server.tar
 kokoro: $(B)/kokoro.tar
+voice-agent: $(B)/voice-agent.tar
+voice-web: $(B)/voice-web.tar
 
 # Checks run inside build recipes only, so pushing an existing tarball does
 # not need the builder.
@@ -105,6 +114,27 @@ $(B)/kokoro.tar: images/kokoro/Dockerfile images/kokoro/launch.json $(B)/kokoro-
 	  --build-context launcher=$(CURDIR)/$(B)/launcher \
 	  --output type=oci,dest=$@ images/kokoro
 
+# ---- voice agent and web client (this repository's own code) ----------------
+
+$(B)/node/bin/node:
+	mkdir -p $(B)/node
+	curl -fL https://nodejs.org/dist/v$(NODE_VERSION)/node-v$(NODE_VERSION)-darwin-arm64.tar.gz \
+	  | tar -xz -C $(B)/node --strip-components 1
+
+$(B)/voice-agent.tar: images/voice-agent/Dockerfile images/voice-agent/launch.json \
+    voice/agent/agent.js voice/agent/package.json voice/agent/package-lock.json \
+    $(B)/node/bin/node $(B)/launcher/launch
+	$(CHECK_BUILDER)
+	$(BUILDX) --build-context node-toolchain=$(CURDIR)/$(B)/node \
+	  --build-context agent-source=$(CURDIR)/voice/agent \
+	  --build-context launcher=$(CURDIR)/$(B)/launcher \
+	  --output type=oci,dest=$@ images/voice-agent
+
+# A Linux image for the Kind cluster, built by Docker Desktop.
+$(B)/voice-web.tar: images/voice-web/Dockerfile voice/web/main.go voice/web/index.html voice/web/go.mod
+	docker --context desktop-linux buildx build --platform linux/arm64 --progress plain \
+	  -f images/voice-web/Dockerfile --output type=oci,dest=$@,name=$(VOICE_WEB_IMAGE) voice/web
+
 # ---- publish ----------------------------------------------------------------
 
 # crane pushes the OCI index as built, keeping its darwin/arm64 platform entry.
@@ -115,13 +145,17 @@ define push_tar
 	rm -rf $(B)/push/$(1)
 endef
 
-push: push-llama-server push-whisper-server push-kokoro
+push: push-llama-server push-whisper-server push-kokoro push-voice-agent push-voice-web
 push-llama-server: $(B)/llama-server.tar
 	$(call push_tar,llama-server,$(LLAMA_IMAGE))
 push-whisper-server: $(B)/whisper-server.tar
 	$(call push_tar,whisper-server,$(WHISPER_IMAGE))
 push-kokoro: $(B)/kokoro.tar
 	$(call push_tar,kokoro,$(KOKORO_IMAGE))
+push-voice-agent: $(B)/voice-agent.tar
+	$(call push_tar,voice-agent,$(VOICE_AGENT_IMAGE))
+push-voice-web: $(B)/voice-web.tar
+	$(call push_tar,voice-web,$(VOICE_WEB_IMAGE))
 
 clean:
 	rm -rf $(B)

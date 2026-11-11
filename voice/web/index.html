@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local voice agent</title>
+  <style>
+    :root { color-scheme: light dark; --accent: #2563eb; }
+    body { font: 16px/1.5 system-ui, sans-serif; max-width: 40rem; margin: 3rem auto; padding: 0 1rem; }
+    button { font: inherit; padding: .6rem 1.2rem; border: 0; border-radius: .5rem; background: var(--accent); color: white; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: default; }
+    #status { color: GrayText; margin: 1rem 0; }
+    #log p { margin: .4rem 0; }
+    #log .agent { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Local voice agent</h1>
+  <p>Speech-to-text, the language model and text-to-speech all run natively on
+    this Mac. Start a conversation and allow the microphone.</p>
+  <button id="toggle">Start conversation</button>
+  <p id="status">Not connected.</p>
+  <div id="log"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.js"
+    integrity="sha256-+2RvImDYT5EjjQotwQcmxFZjHWomx8r8Q8/uWVm00x0=" crossorigin="anonymous"></script>
+  <script>
+    const { Room, RoomEvent, Track } = LivekitClient;
+    const toggle = document.getElementById('toggle');
+    const status = document.getElementById('status');
+    const log = document.getElementById('log');
+    let room = null;
+
+    // One line per transcript segment, updated as its text streams in.
+    const lines = new Map();
+    function show(segment, who, text) {
+      let p = lines.get(segment);
+      if (!p) {
+        p = document.createElement('p');
+        p.className = who;
+        lines.set(segment, p);
+        log.append(p);
+      }
+      p.textContent = (who === 'agent' ? 'Agent: ' : 'You: ') + text;
+    }
+
+    async function start() {
+      toggle.disabled = true;
+      status.textContent = 'Connecting…';
+      const config = await (await fetch('/config')).json();
+      room = new Room();
+      room.on(RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === Track.Kind.Audio) document.body.append(track.attach());
+      });
+      room.on(RoomEvent.ParticipantConnected, () => { status.textContent = 'Agent joined. Speak when ready.'; });
+      room.on(RoomEvent.Disconnected, () => { status.textContent = 'Disconnected.'; toggle.textContent = 'Start conversation'; room = null; });
+      // The agent publishes transcriptions of both sides on this topic, one
+      // stream per segment. Its own speech arrives as deltas on a stream that
+      // may stay open, so show text as it comes; a segment can also be sent
+      // again (interim, then final). A transcript of the user's speech names
+      // the user's microphone track.
+      room.registerTextStreamHandler('lk.transcription', async (reader, participant) => {
+        const attrs = reader.info.attributes || {};
+        const segment = attrs['lk.segment_id'] || reader.info.id;
+        const mic = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+        const who = participant.identity === room.localParticipant.identity ||
+          (mic && attrs['lk.transcribed_track_id'] === mic.trackSid) ? 'you' : 'agent';
+        let text = '';
+        try {
+          for await (const chunk of reader) {
+            text += chunk;
+            if (text.trim()) show(segment, who, text.trim());
+          }
+        } catch { /* the stream ends abnormally on disconnect */ }
+      });
+      await room.connect(config.url, config.token);
+      await room.localParticipant.setMicrophoneEnabled(true);
+      status.textContent = `Connected to room ${config.room}. Waiting for the agent…`;
+      toggle.textContent = 'Stop';
+      toggle.disabled = false;
+    }
+
+    toggle.addEventListener('click', async () => {
+      if (room) { await room.disconnect(); return; }
+      try { await start(); } catch (err) {
+        status.textContent = 'Could not connect: ' + err.message;
+        toggle.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

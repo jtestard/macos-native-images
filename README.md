@@ -16,6 +16,18 @@ Each image is tagged with its upstream version, for example
 `jtstormz/llama-server:ee0445c`. The images are built from unmodified upstream
 sources; this repository only holds the build recipes.
 
+Two more images package a small demo voice assistant whose source lives in
+[`voice/`](voice), which the runtime's voice cluster example runs on Kubernetes:
+
+| Image | Source | What it does |
+| --- | --- | --- |
+| [`jtstormz/voice-agent`](https://hub.docker.com/r/jtstormz/voice-agent) (`darwin/arm64`) | [`voice/agent`](voice/agent/agent.js) | A [LiveKit Agents](https://github.com/livekit/agents-js) voice agent that joins every LiveKit room and talks through the three servers above. |
+| [`jtstormz/voice-web`](https://hub.docker.com/r/jtstormz/voice-web) (`linux/arm64`) | [`voice/web`](voice/web/main.go) | A one-page browser client on port 8090 that hands out LiveKit room tokens. |
+
+[`voice/agent/test-conversation.js`](voice/agent/test-conversation.js) checks
+the whole loop without a microphone: it joins a room through the web client,
+speaks a WAV file, and waits for the agent's spoken reply.
+
 ## Use an image
 
 With the runtime installed, pass its `macnative` Docker context:
@@ -41,8 +53,11 @@ runtime's native BuildKit worker registered as the `macnative-build` Buildx
 builder; the runtime README's "Build a Darwin image" section sets it up.
 
 ```sh
-make all              # or: make llama-server | whisper-server | kokoro
+make all              # or: make llama-server | whisper-server | kokoro | voice-agent | voice-web
 ```
+
+`voice-web` is a Linux image, so Docker Desktop builds it; the others use the
+native builder.
 
 Sources, models and tools are downloaded into `.build/` at the versions pinned
 in the [Makefile](Makefile), and each image is written to
@@ -72,10 +87,13 @@ through `go run`, so nothing else needs installing.
   permission warning when Metal cannot write its shader cache.
 - Kokoro's Python dependencies are resolved from upstream version ranges at
   build time, so a later rebuild can pick newer packages.
+- The voice agent speaks a fixed greeting that stays out of the chat history:
+  some chat templates, such as Mistral's, reject an assistant turn before the
+  first user turn.
 
 ## License
 
 The build recipes are [MIT licensed](LICENSE). Each image contains software and
 model weights under their own upstream licenses: llama.cpp and whisper.cpp
-(MIT), Kokoro-FastAPI (Apache 2.0), Kokoro-82M (Apache 2.0), and the Whisper
-model (MIT).
+(MIT), Kokoro-FastAPI (Apache 2.0), Kokoro-82M (Apache 2.0), the Whisper
+model (MIT), and LiveKit Agents (Apache 2.0) in the voice agent.
