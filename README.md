@@ -8,12 +8,14 @@ without a VM.
 
 | Image | Upstream | What it serves |
 | --- | --- | --- |
-| [`jtstormz/llama-server`](https://hub.docker.com/r/jtstormz/llama-server) | [llama.cpp](https://github.com/ggml-org/llama.cpp) `ee0445c` | OpenAI-compatible chat completions on port 8082. Model-free: mount a GGUF. |
-| [`jtstormz/whisper-server`](https://hub.docker.com/r/jtstormz/whisper-server) | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) `v1.9.1` | Speech-to-text on port 8000 (`/v1/audio/transcriptions`), with the English base model. |
-| [`jtstormz/kokoro`](https://hub.docker.com/r/jtstormz/kokoro) | [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) `b4ef64b` | Text-to-speech on port 8880 (`/v1/audio/speech`) on Metal (MPS), with the Kokoro-82M weights. |
+| [`jtstormz/llama-server`](https://hub.docker.com/r/jtstormz/llama-server) | [llama.cpp](https://github.com/ggml-org/llama.cpp) `ee0445c` | OpenAI-compatible chat completions on port 20082. Model-free: mount a GGUF. |
+| [`jtstormz/whisper-server`](https://hub.docker.com/r/jtstormz/whisper-server) | [whisper.cpp](https://github.com/ggml-org/whisper.cpp) `v1.9.1` | Speech-to-text on port 20084 (`/v1/audio/transcriptions`), with the English base model. |
+| [`jtstormz/kokoro`](https://hub.docker.com/r/jtstormz/kokoro) | [Kokoro-FastAPI](https://github.com/remsky/Kokoro-FastAPI) `b4ef64b` | Text-to-speech on port 20085 (`/v1/audio/speech`) on Metal (MPS), with the Kokoro-82M weights. |
 
-Each image is tagged with its upstream version, for example
-`jtstormz/llama-server:ee0445c`. The images are built from unmodified upstream
+Each image is tagged with its upstream version, plus a `-N` suffix when the
+recipe changes for the same version, for example
+`jtstormz/llama-server:ee0445c-2`. Every server listens on a port in the
+20000 range to avoid clashing with other local services. The images are built from unmodified upstream
 sources; this repository only holds the build recipes.
 
 Two more images package a small demo voice assistant whose source lives in
@@ -22,7 +24,7 @@ Two more images package a small demo voice assistant whose source lives in
 | Image | Source | What it does |
 | --- | --- | --- |
 | [`jtstormz/voice-agent`](https://hub.docker.com/r/jtstormz/voice-agent) (`darwin/arm64`) | [`voice/agent`](voice/agent/agent.js) | A [LiveKit Agents](https://github.com/livekit/agents-js) voice agent that joins every LiveKit room and talks through the three servers above. |
-| [`jtstormz/voice-web`](https://hub.docker.com/r/jtstormz/voice-web) (`linux/arm64`) | [`voice/web`](voice/web/main.go) | A one-page browser client on port 8090 that hands out LiveKit room tokens. |
+| [`jtstormz/voice-web`](https://hub.docker.com/r/jtstormz/voice-web) (`linux/arm64`) | [`voice/web`](voice/web/main.go) | A one-page browser client on port 20090 that hands out LiveKit room tokens. |
 
 [`voice/agent/test-conversation.js`](voice/agent/test-conversation.js) checks
 the whole loop without a microphone: it joins a room through the web client,
@@ -33,9 +35,9 @@ speaks a WAV file, and waits for the agent's spoken reply.
 With the runtime installed, pass its `macnative` Docker context:
 
 ```sh
-docker --context macnative pull jtstormz/whisper-server:v1.9.1-base.en
-docker --context macnative run -d --name whisper jtstormz/whisper-server:v1.9.1-base.en
-curl http://127.0.0.1:8000/v1/audio/transcriptions -F file=@speech.wav
+docker --context macnative pull jtstormz/whisper-server:v1.9.1-base.en-2
+docker --context macnative run -d --name whisper jtstormz/whisper-server:v1.9.1-base.en-2
+curl http://127.0.0.1:20084/v1/audio/transcriptions -F file=@speech.wav
 ```
 
 To leave out `--context`, run `docker context use macnative` once; switch back

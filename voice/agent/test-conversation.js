@@ -3,7 +3,7 @@
 // speaks a WAV file, and prints the transcripts the agent publishes for both
 // sides. Exits 0 once the agent has transcribed the speech and replied.
 //
-//   node test-conversation.js speech.wav [http://127.0.0.1:8090]
+//   node test-conversation.js speech.wav [http://127.0.0.1:20090]
 //
 // The WAV must be 16-bit PCM, mono. On macOS:
 //   say -o speech.aiff "What is the capital of France?"
@@ -13,7 +13,7 @@ import {
   AudioFrame, AudioSource, dispose, LocalAudioTrack, Room, TrackPublishOptions, TrackSource,
 } from '@livekit/rtc-node';
 
-const [wavPath, webURL = 'http://127.0.0.1:8090'] = process.argv.slice(2);
+const [wavPath, webURL = 'http://127.0.0.1:20090'] = process.argv.slice(2);
 if (!wavPath) {
   console.error('usage: node test-conversation.js speech.wav [web-url]');
   process.exit(2);

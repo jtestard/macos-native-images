@@ -22,8 +22,8 @@ import (
 var page []byte
 
 func main() {
-	addr := flag.String("addr", "127.0.0.1:8090", "listen address")
-	livekitURL := flag.String("livekit-url", "ws://localhost:7880", "LiveKit URL as seen from the browser")
+	addr := flag.String("addr", "127.0.0.1:20090", "listen address")
+	livekitURL := flag.String("livekit-url", "ws://localhost:20880", "LiveKit URL as seen from the browser")
 	flag.Parse()
 	apiKey := envOr("LIVEKIT_API_KEY", "devkey")
 	apiSecret := envOr("LIVEKIT_API_SECRET", "secret")

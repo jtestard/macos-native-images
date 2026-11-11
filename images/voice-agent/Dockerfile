@@ -22,5 +22,5 @@ COPY --from=launcher /launch ./bin/launch
 COPY --from=node-toolchain /bin/node ./bin/node
 COPY --from=build /app/agent/ ./agent/
 COPY launch.json ./launch.json
-EXPOSE 8083
+EXPOSE 20083
 ENTRYPOINT ["./bin/launch"]

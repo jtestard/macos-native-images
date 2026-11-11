@@ -31,5 +31,5 @@ RUN mkdir -p output .home .tmp \
 FROM scratch
 WORKDIR /app
 COPY --from=build /work/output/bin/llama-server ./bin/llama-server
-EXPOSE 8082
-ENTRYPOINT ["./bin/llama-server", "--host", "127.0.0.1", "--port", "8082", "--n-gpu-layers", "99"]
+EXPOSE 20082
+ENTRYPOINT ["./bin/llama-server", "--host", "127.0.0.1", "--port", "20082", "--n-gpu-layers", "99"]

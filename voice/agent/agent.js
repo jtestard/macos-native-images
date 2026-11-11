@@ -25,19 +25,19 @@ export default defineAgent({
     const session = new voice.AgentSession({
       vad: ctx.proc.userData.vad,
       stt: new openai.STT({
-        baseURL: env('STT_BASE_URL', 'http://127.0.0.1:8000/v1'),
+        baseURL: env('STT_BASE_URL', 'http://127.0.0.1:20084/v1'),
         apiKey: LOCAL_KEY,
         model: 'whisper-1',
         language: 'en',
         useRealtime: false,
       }),
       llm: new openai.LLM({
-        baseURL: env('LLM_BASE_URL', 'http://127.0.0.1:8080/v1'),
+        baseURL: env('LLM_BASE_URL', 'http://127.0.0.1:20082/v1'),
         apiKey: LOCAL_KEY,
         model: env('LLM_MODEL', 'local'),
       }),
       tts: new openai.TTS({
-        baseURL: env('TTS_BASE_URL', 'http://127.0.0.1:8880/v1'),
+        baseURL: env('TTS_BASE_URL', 'http://127.0.0.1:20085/v1'),
         apiKey: LOCAL_KEY,
         model: 'kokoro',
         voice: env('TTS_VOICE', 'af_heart'),
@@ -59,11 +59,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   cli.runApp(
     new ServerOptions({
       agent: fileURLToPath(import.meta.url),
-      wsURL: env('LIVEKIT_URL', 'ws://127.0.0.1:7880'),
+      wsURL: env('LIVEKIT_URL', 'ws://127.0.0.1:20880'),
       apiKey: env('LIVEKIT_API_KEY', 'devkey'),
       apiSecret: env('LIVEKIT_API_SECRET', 'secret'),
-      // Health and metrics endpoint; 8081 is the default, kept free for others.
-      port: Number(env('AGENT_PORT', '8083')),
+      // Health and metrics endpoint (the framework default, 8081, is left free).
+      port: Number(env('AGENT_PORT', '20083')),
     }),
   );
 }

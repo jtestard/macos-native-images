@@ -38,5 +38,5 @@ COPY --from=build /app/site-packages/ ./site-packages/
 COPY --from=build /app/kokoro/ ./kokoro/
 COPY --from=kokoro-weights /kokoro-v1_0.pth ./kokoro/api/src/models/v1_0/kokoro-v1_0.pth
 COPY launch.json ./launch.json
-EXPOSE 8880
+EXPOSE 20085
 ENTRYPOINT ["./bin/launch"]

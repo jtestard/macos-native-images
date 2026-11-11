@@ -25,5 +25,5 @@ FROM scratch
 WORKDIR /app
 COPY --from=build /work/output/bin/whisper-server ./bin/whisper-server
 COPY --from=whisper-model /ggml-base.en.bin ./models/ggml-base.en.bin
-EXPOSE 8000
-ENTRYPOINT ["./bin/whisper-server", "-m", "models/ggml-base.en.bin", "--host", "127.0.0.1", "--port", "8000", "--inference-path", "/v1/audio/transcriptions", "-l", "en", "-nt", "-t", "4"]
+EXPOSE 20084
+ENTRYPOINT ["./bin/whisper-server", "-m", "models/ggml-base.en.bin", "--host", "127.0.0.1", "--port", "20084", "--inference-path", "/v1/audio/transcriptions", "-l", "en", "-nt", "-t", "4"]
