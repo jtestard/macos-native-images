@@ -11,7 +11,7 @@ WHISPER_REF   := v1.9.1
 KOKORO_REF    := b4ef64b
 UV_VERSION    := 0.13.4
 NODE_VERSION  := 22.23.4
-VOICE_VERSION := 0.1.3
+VOICE_VERSION := 0.1.4
 
 LLAMA_IMAGE   := $(NAMESPACE)/llama-server:$(LLAMA_CPP_REF)-2
 WHISPER_IMAGE := $(NAMESPACE)/whisper-server:$(WHISPER_REF)-base.en-2
@@ -123,6 +123,7 @@ $(B)/node/bin/node:
 
 $(B)/voice-agent.tar: images/voice-agent/Dockerfile images/voice-agent/launch.json \
     voice/agent/agent.js voice/agent/package.json voice/agent/package-lock.json \
+    $(wildcard voice/agent/patches/*.patch) voice/agent/no-local-inference/index.js \
     $(B)/node/bin/node $(B)/launcher/launch
 	$(CHECK_BUILDER)
 	$(BUILDX) --build-context node-toolchain=$(CURDIR)/$(B)/node \

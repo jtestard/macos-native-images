@@ -3,11 +3,15 @@
   "private": true,
   "type": "module",
   "main": "agent.js",
+  "scripts": {
+    "postinstall": "patch-package --error-on-fail"
+  },
   "dependencies": {
     "@livekit/agents": "1.9.4",
     "@livekit/agents-plugin-openai": "1.9.4",
     "@livekit/agents-plugin-silero": "1.9.4",
-    "@livekit/local-inference": "file:./no-local-inference"
+    "@livekit/local-inference": "file:./no-local-inference",
+    "patch-package": "8.0.1"
   },
   "overrides": {
     "@livekit/local-inference": "$@livekit/local-inference"

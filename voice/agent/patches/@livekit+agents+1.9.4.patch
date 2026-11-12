@@ -1,0 +1,72 @@
+diff --git a/node_modules/@livekit/agents/dist/ipc/proc_pool.cjs b/node_modules/@livekit/agents/dist/ipc/proc_pool.cjs
+index 5868716..e054fb4 100644
+--- a/node_modules/@livekit/agents/dist/ipc/proc_pool.cjs
++++ b/node_modules/@livekit/agents/dist/ipc/proc_pool.cjs
+@@ -72,9 +72,14 @@ class ProcPool {
+   async launchJob(info) {
+     let proc;
+     if (this.procMutex) {
+-      const entry = await this.warmedProcQueue.get();
+-      proc = entry.proc;
+-      entry.unlock();
++      for (;;) {
++        const entry = await this.warmedProcQueue.get();
++        entry.unlock();
++        if (entry.proc.isAlive) {
++          proc = entry.proc;
++          break;
++        }
++      }
+     } else {
+       proc = new import_job_proc_executor.JobProcExecutor({
+         agent: this.agent,
+@@ -125,6 +130,13 @@ class ProcPool {
+         } catch {
+         }
+         await proc.join();
++        if (procUnlockTransferred) {
++          const queued = this.warmedProcQueue.items.findIndex((e) => e.proc === proc);
++          if (queued !== -1) {
++            const [entry] = this.warmedProcQueue.items.splice(queued, 1);
++            entry.unlock();
++          }
++        }
+       } finally {
+         if (!initReleased) {
+           unlock();
+diff --git a/node_modules/@livekit/agents/dist/ipc/proc_pool.js b/node_modules/@livekit/agents/dist/ipc/proc_pool.js
+index 3bc2496..d30d5e3 100644
+--- a/node_modules/@livekit/agents/dist/ipc/proc_pool.js
++++ b/node_modules/@livekit/agents/dist/ipc/proc_pool.js
+@@ -49,9 +49,14 @@ class ProcPool {
+   async launchJob(info) {
+     let proc;
+     if (this.procMutex) {
+-      const entry = await this.warmedProcQueue.get();
+-      proc = entry.proc;
+-      entry.unlock();
++      for (;;) {
++        const entry = await this.warmedProcQueue.get();
++        entry.unlock();
++        if (entry.proc.isAlive) {
++          proc = entry.proc;
++          break;
++        }
++      }
+     } else {
+       proc = new JobProcExecutor({
+         agent: this.agent,
+@@ -102,6 +107,13 @@ class ProcPool {
+         } catch {
+         }
+         await proc.join();
++        if (procUnlockTransferred) {
++          const queued = this.warmedProcQueue.items.findIndex((e) => e.proc === proc);
++          if (queued !== -1) {
++            const [entry] = this.warmedProcQueue.items.splice(queued, 1);
++            entry.unlock();
++          }
++        }
+       } finally {
+         if (!initReleased) {
+           unlock();
