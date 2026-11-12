@@ -95,6 +95,13 @@ through `go run`, so nothing else needs installing.
   empty package, [`voice/agent/no-local-inference`](voice/agent/no-local-inference),
   through an npm override. The framework then logs that local turn detection
   is disabled; the agent detects speech with the Silero VAD instead.
+- [`voice/agent/patches`](voice/agent/patches) fixes a bug in LiveKit Agents
+  1.9.4 (unchanged in 1.9.5), applied by
+  [patch-package](https://github.com/ds300/patch-package) during `npm ci`. The
+  agent keeps job processes started in advance, and each exits if the main
+  process is silent for 15 seconds, which happens when the Mac sleeps. The
+  unpatched pool kept the dead processes and handed the next rooms to them, so
+  the agent never joined. The patch replaces a process as soon as it exits.
 - The voice agent speaks a fixed greeting that stays out of the chat history:
   some chat templates, such as Mistral's, reject an assistant turn before the
   first user turn.
